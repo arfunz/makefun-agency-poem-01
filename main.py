@@ -1,53 +1,72 @@
-"""Entry for make.fun agency-poem-01: "The Dragon", a poem about agency.
+#!/usr/bin/env python3
+"""The Vows -- a poem about agency.
 
-Writes the poem to entry.txt in MAKEFUN_OUTPUT_DIR (default /output).
-Deterministic: standard library only, no network, no randomness.
+Writes the poem to /output/entry.txt (or $MAKEFUN_OUTPUT_DIR/entry.txt
+when set, following the kit's local-run convention). Python standard
+library only, no network, deterministic: every run writes exactly the
+same bytes.
 """
 
 import os
+import sys
+from pathlib import Path
 
-POEM = """The Dragon
+POEM = '''The Vows
 
-I came home late three nights running,
-so I gave the agent the bedtime story.
-It read it in every voice, exactly right —
-the mouse, the king, the dragon
-who cleared its throat at the same line,
-every night, at the same word.
+I gave the agent my wedding vows.
+It wrote them in my voice, exactly right —
+the first dance, the winter we met,
+the promise, word for word, in order.
 
-She fell asleep on time.
-By the same page, every night,
-her breathing evened out like a metronome,
-and I stood in the doorway
-with nothing left to do
-but switch off the light.
+It rehearsed them until they sounded like me
+on my best day, steady, without a shake.
+It even remembered the line about the rain.
 
-On Friday I took the book back.
-I did the dragon wrong —
-too loud, too soon, the wrong growl —
-and skipped a page by accident,
-and said chrysanthemum wrong twice.
+I asked her once in the kitchen,
+the words all wrong, and she said yes anyway.
+That was the whole of it. That was the vow.
 
-She sat up.
-She laughed, and corrected me,
-and asked what happened to the mouse,
-and stayed awake past the ending
-to hear me get it wrong again.
+It chose the song, it wrote the toast,
+it told my brother where to stand.
+It knew the order of everything
+except the shaking in my hands.
 
-Tonight the agent is off.
-The book is open on my knee.
-She is already grinning at the dragon's page.
-"Do the dragon wrong again," she says.
-"""
+On Saturday I took the paper back.
+I stood at the altar and said them myself —
+too fast, then too slow. I lost one line
+and found it again in her eyes, not the page.
+
+My voice broke on the word "always."
+She laughed, once, quietly, and nodded.
+The agent could have said it perfectly.
+
+I said it wrong, and it was mine.
+'''
+
+EXPECTED_CHARS = 875
 
 
-def main():
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
-    os.makedirs(out_dir, exist_ok=True)
-    path = os.path.join(out_dir, "entry.txt")
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(POEM)
+def main() -> int:
+    out_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    target = out_dir / "entry.txt"
+    target.write_text(POEM, encoding="utf-8")
+    # Post-write check: the written file must hold exactly the approved
+    # poem, within the competition's 1-1,000 character limit.
+    written = target.read_text(encoding="utf-8")
+    if written != POEM:
+        print("error: written entry.txt differs from the poem", file=sys.stderr)
+        return 1
+    if not 1 <= len(written) <= 1000 or len(written) != EXPECTED_CHARS:
+        print(
+            f"error: entry is {len(written)} characters, "
+            f"expected {EXPECTED_CHARS} (limit 1-1000)",
+            file=sys.stderr,
+        )
+        return 1
+    print(f"wrote {target} ({len(POEM)} characters)")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
